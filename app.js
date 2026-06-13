@@ -1,10 +1,80 @@
 "use strict";
 
-const APP_VERSION = "v18";
+const APP_VERSION = "v19";
 const STORE_KEY = "stn-care-state-v1";
 const PASS_KEY = "stn-care-pass-v1";
 const DEFAULT_REMINDERS = { enabled: false, morning: "07:00", evening: "20:00" };
 const DEFAULT_TRACKING = { adaptivePhases: true, adaptiveFrom: "", earnedBaseline: null };
+const REMINDER_COPY = {
+  morning: {
+    standard: [
+      "Guten Morgen. {totalSteps} Schritte warten, erster Griff: {nextProduct}. Heute holen wir uns die 100%.",
+      "{dayName}, Woche {week}: Morgenroutine steht. {nextProduct} startet den sauberen Lauf.",
+      "Frischer Start: {totalSteps} Schritte, klare Hautarbeit, kein Drama. Fang mit {nextProduct} an.",
+      "Heute zählt sauber statt schnell. Morgenroutine öffnen, {nextProduct} nehmen, dann Schritt für Schritt.",
+      "Der Plan ist bereit. {focus}",
+      "Monatsquote {monthPct}%. Heute ist ein guter Tag, sie nach oben zu ziehen.",
+      "Morgenroutine bereit. Kleine Routine, große Wirkung: erst {nextProduct}, dann weiter durchziehen.",
+      "Zeit für den sauberen Start. {totalSteps} Schritte, Fokus auf ruhig und konstant."
+    ],
+    rebound: [
+      "Gestern waren es {yesterdayPct}%. Heute machen wir es besser: Morgenroutine steht bereit.",
+      "Gestern nicht perfekt, heute neu. {nextProduct} ist dein erster Schritt zurück auf 100%.",
+      "Kein Grübeln über gestern. Heute sauber starten, {totalSteps} Schritte, fertig.",
+      "Gestern hat Luft nach oben gelassen. Heute ziehst du die Morgenroutine glatt durch.",
+      "Reset am Waschbecken: {nextProduct} zuerst, dann baust du den Tag wieder stark auf.",
+      "Gestern {yesterdayPct}%, heute soll es runder werden. Die Morgenroutine wartet.",
+      "Heute ist der einfache Gewinn: Starten, abhaken, weitermachen.",
+      "Kleiner Neustart: {focus}"
+    ],
+    streak: [
+      "{streak} volle Tage in Serie. Nicht reißen lassen: Morgenroutine bereit.",
+      "Deine Serie läuft. {nextProduct} nehmen und den sauberen Rhythmus halten.",
+      "{streak} Tage sauber durchgezogen. Heute kommt der nächste dazu.",
+      "Konstanz steht dir. Morgenroutine starten und die Serie weiterbauen.",
+      "Starker Lauf: {streak} Tage. Erst {nextProduct}, dann weiter wie geplant.",
+      "Du bist im Flow. {totalSteps} Schritte bis zum nächsten sauberen Tag."
+    ]
+  },
+  evening: {
+    standard: [
+      "Abendroutine bereit. Heute steht bei {todayPct}%, jetzt sauber abschließen.",
+      "{phaseName} für {dayName}: App öffnen, Reihenfolge laufen lassen, fertig.",
+      "Der Tag ist fast im Kasten. {totalSteps} Abend-Schritte warten.",
+      "Abends gewinnt die ruhige Reihenfolge. Starte mit {nextProduct}.",
+      "Heute schon {todayPct}% erledigt. Jetzt machst du den Abschluss sauber.",
+      "Deine Haut mag Konstanz. Abendroutine öffnen und Schritt für Schritt abhaken.",
+      "Woche {week}, Abendrunde: kein Rätselraten, die App sagt dir die Reihenfolge.",
+      "Runterfahren, reinigen, pflegen. {focus}"
+    ],
+    rebound: [
+      "Gestern {yesterdayPct}%. Heute kannst du den Tag noch stark schließen.",
+      "Heute Abend zählt: App öffnen, {nextProduct} starten, Routine retten.",
+      "Nicht perfekt gestartet? Egal. Abendroutine sauber durchziehen und morgen leichter machen.",
+      "Das ist der Moment für Disziplin ohne Stress: {totalSteps} Schritte bis Tagesabschluss.",
+      "Gestern war ausbaufähig. Heute holst du dir den besseren Abschluss.",
+      "Abend-Reset: {nextProduct} zuerst, dann Punkt für Punkt weiter.",
+      "Heute noch nicht rund? Genau dafür gibt es die Abendroutine.",
+      "Mach den Tag ordentlich zu. Morgen dankt dir dein Spiegelbild."
+    ],
+    finish: [
+      "Du stehst bei {todayPct}%. Jetzt fehlen nur noch die letzten Schritte zur 100%.",
+      "Fast fertig. Abendroutine öffnen und den vollen Pflegetag sichern.",
+      "Das Ziel ist in Reichweite: {totalSteps} Abend-Schritte bis zum sauberen Haken.",
+      "{todayPct}% sind schon stark. Jetzt machst du daraus 100%.",
+      "Nicht auf halber Strecke parken. Abendroutine starten, Tagespunkt holen.",
+      "Heute ist ein guter 100%-Kandidat. Zieh den Abschluss durch."
+    ],
+    streak: [
+      "{streak} volle Tage in Serie. Abendroutine sichert den nächsten.",
+      "Deine Serie lebt vom Abend. {nextProduct} starten und den Lauf halten.",
+      "{streak} Tage stark. Jetzt sauber abschließen und weiterbauen.",
+      "Konstanz schlägt Perfektion. Abendroutine öffnen, Serie halten.",
+      "Der Rhythmus sitzt. Heute Abend machst du ihn wieder sichtbar.",
+      "Streak-Modus: {totalSteps} Schritte, dann ist der Tag sauber."
+    ]
+  }
+};
 const SESSION = { MORNING: "morning", EVENING: "evening" };
 const DAY_ORDER = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 const JS_DAY_TO_KEY = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
@@ -114,6 +184,7 @@ function freshState() {
     startDate: todayISO(),
     todayMode: "wizard",
     controlsOpen: false,
+    todayHeaderOpen: false,
     reminders: { ...DEFAULT_REMINDERS },
     tracking: { ...DEFAULT_TRACKING },
     checks: {}
@@ -128,6 +199,7 @@ function loadState() {
     if (!parsed.startDate) parsed.startDate = todayISO();
     if (!parsed.todayMode) parsed.todayMode = "wizard";
     parsed.controlsOpen = Boolean(parsed.controlsOpen);
+    parsed.todayHeaderOpen = Boolean(parsed.todayHeaderOpen);
     parsed.reminders = { ...DEFAULT_REMINDERS, ...(parsed.reminders || {}) };
     parsed.tracking = { ...DEFAULT_TRACKING, ...(parsed.tracking || {}) };
     if (!parsed.checks) parsed.checks = {};
@@ -466,24 +538,9 @@ function todayView(ctx) {
   const note = ctx.session === SESSION.MORNING ? routineData.routineNotes.morning : routineData.routineNotes[ctx.phase];
   const mode = appState.todayMode || "wizard";
   return h("section.view", null,
-    h("div.today-hero", null,
-      h("div.kicker", { data: { clock: "now" } }, `${dateLabel()} · ${timeLabel()}`),
-      h("h1", null, sessionTitle(ctx.session)),
-      h("p", null, `${phaseLabel(ctx)} · ${routineData.dayNames[ctx.day]}`),
-      h("div.focus-strip", null, h("b", null, "Fokus heute"), h("span", null, todayFocus(ctx))),
-      compactControlBar(ctx, mode),
-      appState.controlsOpen ? h("div.controls-panel", null, sessionSwitch(ctx), todayModeSwitch(mode)) : null,
-      h("div.status-grid", null,
-        infoTile("Auswahl", ctx.manual ? `Manuell: ${sessionTitle(ctx.session).replace("routine", "")}` : `Auto: ${sessionTitle(ctx.auto).replace("routine", "")}`),
-        infoTile("Planstand", `Woche ${ctx.week}`),
-        infoTile("Heute", `${dayPct}%`),
-        infoTile("Pflegetage", `${ctx.progress.earnedDays}/${ctx.progress.nextThreshold || "∞"}`)
-      ),
-      h("div.progress-wrap", null,
-        h("div.progress-line", null, h("i", { style: `width:${pct}%` })),
-        h("div.progress-label", null, h("span", null, `${pct}% erledigt`), h("span", null, nextChange(ctx)))
-      )
-    ),
+    appState.todayHeaderOpen
+      ? expandedTodayHeader(ctx, mode, pct, dayPct)
+      : compactTodayHeader(ctx, mode, pct),
     accountabilityNotice(ctx, dayScore),
     mode === "wizard"
       ? [
@@ -507,17 +564,65 @@ function todayView(ctx) {
   );
 }
 
+function compactTodayHeader(ctx, mode, pct) {
+  return h("div.today-compact", null,
+    h("div.compact-copy", null,
+      h("span.kicker", { data: { clock: "now" } }, `${dateLabel()} · ${timeLabel()}`),
+      h("h1", null, sessionTitle(ctx.session)),
+      h("p", null, todayFocus(ctx)),
+      h("div.progress-line", null, h("i", { style: `width:${pct}%` }))
+    ),
+    h("div.compact-actions", null,
+      h("button.ghost-btn.small", { on: { click: toggleControls } }, appState.controlsOpen ? "Optionen zu" : "Optionen"),
+      h("button.ghost-btn.small", { on: { click: toggleTodayHeader } }, "Details")
+    ),
+    appState.controlsOpen ? h("div.controls-panel", null, sessionSwitch(ctx), todayModeSwitch(mode)) : null
+  );
+}
+
+function expandedTodayHeader(ctx, mode, pct, dayPct) {
+  return h("div.today-hero", null,
+    h("div.today-hero-top", null,
+      h("div", null,
+        h("div.kicker", { data: { clock: "now" } }, `${dateLabel()} · ${timeLabel()}`),
+        h("h1", null, sessionTitle(ctx.session)),
+        h("p", null, `${phaseLabel(ctx)} · ${routineData.dayNames[ctx.day]}`)
+      ),
+      h("button.ghost-btn.small", { on: { click: toggleTodayHeader } }, "Fokusmodus")
+    ),
+    h("div.focus-strip", null, h("b", null, "Fokus heute"), h("span", null, todayFocus(ctx))),
+    compactControlBar(ctx, mode),
+    appState.controlsOpen ? h("div.controls-panel", null, sessionSwitch(ctx), todayModeSwitch(mode)) : null,
+    h("div.status-grid", null,
+      infoTile("Auswahl", ctx.manual ? `Manuell: ${sessionTitle(ctx.session).replace("routine", "")}` : `Auto: ${sessionTitle(ctx.auto).replace("routine", "")}`),
+      infoTile("Planstand", `Woche ${ctx.week}`),
+      infoTile("Heute", `${dayPct}%`),
+      infoTile("Pflegetage", `${ctx.progress.earnedDays}/${ctx.progress.nextThreshold || "∞"}`)
+    ),
+    h("div.progress-wrap", null,
+      h("div.progress-line", null, h("i", { style: `width:${pct}%` })),
+      h("div.progress-label", null, h("span", null, `${pct}% erledigt`), h("span", null, nextChange(ctx)))
+    )
+  );
+}
+
 function compactControlBar(ctx, mode) {
   return h("div.focus-control-bar", null,
     h("span", null, `${ctx.manual ? "Manuell" : "Auto"} · ${sessionTitle(ctx.session)} · ${mode === "wizard" ? "Wizard" : "Tagesplan"}`),
-    h("button.ghost-btn.small", {
-      on: { click: () => {
-        appState.controlsOpen = !appState.controlsOpen;
-        saveState();
-        renderApp();
-      } }
-    }, appState.controlsOpen ? "Optionen ausblenden" : "Optionen")
+    h("button.ghost-btn.small", { on: { click: toggleControls } }, appState.controlsOpen ? "Optionen ausblenden" : "Optionen")
   );
+}
+
+function toggleControls() {
+  appState.controlsOpen = !appState.controlsOpen;
+  saveState();
+  renderApp();
+}
+
+function toggleTodayHeader() {
+  appState.todayHeaderOpen = !appState.todayHeaderOpen;
+  saveState();
+  renderApp();
 }
 
 function accountabilityNotice(ctx, score) {
@@ -525,6 +630,12 @@ function accountabilityNotice(ctx, score) {
   const missed = score.morning.done === 0
     ? "Du hast morgens noch nichts abgehakt."
     : `Morgens stehen nur ${score.morning.done}/${score.morning.total} Schritte.`;
+  if (!appState.todayHeaderOpen) {
+    return h("div.notice.accountability.is-compact", null,
+      h("b", null, "Morgen offen: "),
+      `${score.morning.done}/${score.morning.total}. Nachtragen, wenn du es gemacht hast.`
+    );
+  }
   return h("div.notice.accountability", null,
     h("b", null, "Kurzer Reality-Check: "),
     `${missed} Wenn du es wirklich gemacht hast, trage es nach. Wenn nicht: heute zählt nicht als voller Pflegetag und die nächste Phase rückt nach hinten.`
@@ -1006,6 +1117,7 @@ function monthModel(referenceDate) {
     if (usable) usableScores.push(score);
     cells.push({
       day,
+      weekday: new Intl.DateTimeFormat("de-DE", { weekday: "short" }).format(date),
       iso,
       pct,
       score,
@@ -1045,7 +1157,7 @@ function monthCell(cell) {
       ? "Zukünftig"
       : `${cell.score.done}/${cell.score.total} Schritte`;
   return h("article.month-cell", { class: `${cell.className} ${cell.isToday ? "is-today" : ""}` },
-    h("b", null, String(cell.day)),
+    h("div.month-date", null, h("b", null, String(cell.day)), h("em", null, cell.weekday || "")),
     h("span", null, cell.beforeStart || cell.isFuture ? "–" : `${cell.pct}%`),
     h("small", null, title)
   );
@@ -1215,7 +1327,7 @@ function reminderPanel() {
     h("div.reminder-head", null,
       h("span.kicker", null, "Erinnerungen"),
       h("h2", null, "Routine-Ping"),
-      h("p", null, status)
+      h("p", null, `${status}. Läuft lokal auf diesem Gerät, ohne externen Dienst.`)
     ),
     h("div.reminder-times", null,
       timeField("Morgen", reminders.morning, (value) => updateReminderTime("morning", value)),
@@ -1324,13 +1436,9 @@ function clearReminderTimer() {
 
 async function showRoutineNotification(kind) {
   if (!("Notification" in window) || Notification.permission !== "granted") return;
-  const isMorning = kind === SESSION.MORNING;
-  const title = isMorning ? "Morgenroutine" : "Abendroutine";
-  const body = isMorning
-    ? "Zeit für Reinigung, Vitamin C, Feuchtigkeit und SPF."
-    : "Zeit für die Abendrotation. Die App zeigt dir den heutigen Plan.";
+  const message = routineNotification(kind);
   const options = {
-    body,
+    body: message.body,
     icon: "icon-192.png",
     badge: "icon-180.png",
     tag: `stn-care-${kind}`,
@@ -1339,11 +1447,73 @@ async function showRoutineNotification(kind) {
   try {
     const reg = await navigator.serviceWorker?.getRegistration?.();
     if (reg?.showNotification) {
-      await reg.showNotification(title, options);
+      await reg.showNotification(message.title, options);
       return;
     }
   } catch (err) {}
-  new Notification(title, options);
+  new Notification(message.title, options);
+}
+
+function routineNotification(kind, now = new Date()) {
+  const stats = notificationStats(kind, now);
+  const pool = reminderCopyPool(kind, stats);
+  const seed = hashText(`${todayISO(now)}:${kind}:${stats.yesterdayPct}:${stats.todayPct}:${stats.streak}:${stats.monthPct}`);
+  const body = fillTemplate(pool[Math.abs(seed) % pool.length], stats);
+  return {
+    title: kind === SESSION.MORNING ? "Morgenroutine bereit" : "Abendroutine bereit",
+    body
+  };
+}
+
+function notificationStats(kind, now = new Date()) {
+  const session = kind === SESSION.EVENING ? SESSION.EVENING : SESSION.MORNING;
+  const ctx = currentContext(now);
+  const day = JS_DAY_TO_KEY[now.getDay()];
+  const phase = ctx.phase;
+  const dateKey = todayISO(now);
+  const ids = routineIdsFor(session, phase, day);
+  const keyPhase = session === SESSION.MORNING ? "am" : phase;
+  const checks = appState.checks[routineKeyFor(dateKey, session, keyPhase, day)] || [];
+  const pendingIndex = ids.findIndex((_, index) => !checks[index]);
+  const nextId = ids[pendingIndex >= 0 ? pendingIndex : 0];
+  const todayScore = dayCompletion(dateKey, day, phase);
+  const yesterday = addDays(parseISODate(dateKey), -1);
+  const yesterdayProgress = earnedProgress(yesterday);
+  const yesterdayScore = dayCompletion(todayISO(yesterday), JS_DAY_TO_KEY[yesterday.getDay()], yesterdayProgress.phase);
+  const month = monthModel(now);
+  return {
+    dayName: routineData.dayNames[day] || "",
+    focus: todayFocus({ ...ctx, session, day, phase, dateKey, manual: false }),
+    monthPct: month.average,
+    nextProduct: nextId ? product(nextId).short || product(nextId).name : "der erste Schritt",
+    phaseName: session === SESSION.MORNING ? "Basisroutine" : routineData.phaseNames[phase],
+    streak: fullDayStreak(),
+    todayPct: Math.round(todayScore.pct * 100),
+    totalSteps: ids.length,
+    week: ctx.week,
+    yesterdayPct: Math.round(yesterdayScore.pct * 100)
+  };
+}
+
+function reminderCopyPool(kind, stats) {
+  const group = REMINDER_COPY[kind === SESSION.EVENING ? SESSION.EVENING : SESSION.MORNING];
+  if (kind === SESSION.EVENING && stats.todayPct >= 60) return group.finish;
+  if (stats.yesterdayPct < 70) return group.rebound;
+  if (stats.streak >= 3) return group.streak;
+  return group.standard;
+}
+
+function fillTemplate(template, stats) {
+  return template.replace(/\{(\w+)\}/g, (_, key) => stats[key] == null ? "" : String(stats[key]));
+}
+
+function hashText(value) {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = ((hash << 5) - hash) + value.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash;
 }
 
 function phaseDateRow(label, from, to) {

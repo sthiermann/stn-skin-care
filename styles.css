@@ -250,6 +250,7 @@ button:disabled {
 }
 
 .today-hero,
+.today-compact,
 .next-card,
 .step-card,
 .product-card,
@@ -269,6 +270,56 @@ button:disabled {
   display: grid;
   gap: 13px;
   padding: 16px;
+}
+
+.today-compact {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 13px;
+}
+
+.compact-copy {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.compact-copy h1 {
+  margin: 0;
+  font-size: 1.46rem;
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+
+.compact-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.38;
+}
+
+.compact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.today-compact .controls-panel {
+  grid-column: 1 / -1;
+}
+
+.today-hero-top {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.today-hero-top > div {
+  min-width: 0;
 }
 
 .kicker,
@@ -536,15 +587,22 @@ button:disabled {
   color: #7b3f2c;
 }
 
+.notice.accountability.is-compact {
+  padding: 9px 10px;
+  font-size: 0.84rem;
+}
+
 .action-row,
 .settings-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  min-width: 0;
 }
 
 .action-row > * {
   flex: 1 1 140px;
+  min-width: 0;
 }
 
 .step-list {
@@ -642,11 +700,13 @@ button:disabled {
 
 .settings-panel {
   overflow: hidden;
+  min-width: 0;
 }
 
 .reminder-panel {
   display: grid;
   gap: 11px;
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: var(--r);
   background: var(--surface-2);
@@ -669,8 +729,9 @@ button:disabled {
 
 .reminder-times {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+  min-width: 0;
 }
 
 .phase-rail {
@@ -867,6 +928,21 @@ button:disabled {
   font-size: 0.95rem;
 }
 
+.month-date {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.month-date em {
+  color: var(--faint);
+  font-size: 0.64rem;
+  font-style: normal;
+  font-weight: 850;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
 .month-cell span {
   font-weight: 900;
   line-height: 1;
@@ -877,6 +953,7 @@ button:disabled {
   color: var(--muted);
   font-size: 0.66rem;
   line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .month-cell.is-empty {
@@ -1233,6 +1310,7 @@ button:disabled {
 .phase-dates {
   display: grid;
   gap: 7px;
+  min-width: 0;
 }
 
 .date-row {
@@ -1260,6 +1338,7 @@ button:disabled {
 .field {
   display: grid;
   gap: 6px;
+  min-width: 0;
 }
 
 .field label {
@@ -1270,6 +1349,7 @@ button:disabled {
 
 .field input,
 .pass-input {
+  box-sizing: border-box;
   min-height: 48px;
   width: 100%;
   max-width: 100%;
@@ -1550,6 +1630,30 @@ button:disabled {
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .today-compact {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .compact-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+  }
+
+  .compact-copy h1 {
+    font-size: 1.34rem;
+  }
+
+  .today-hero-top {
+    display: grid;
+    gap: 10px;
+  }
+
+  .today-hero-top .ghost-btn {
+    justify-self: start;
+  }
+
   .progress-label {
     display: grid;
   }
@@ -1603,8 +1707,51 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
+  .settings-panel,
+  .reminder-panel {
+    padding: 12px;
+  }
+
+  .month-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .month-head,
+  .month-cell.is-empty {
+    display: none;
+  }
+
+  .month-cell {
+    min-height: 0;
+    grid-template-columns: 56px 54px minmax(0, 1fr);
+    gap: 9px;
+    align-items: center;
+    align-content: center;
+    padding: 10px;
+  }
+
+  .month-date b {
+    font-size: 1.05rem;
+  }
+
+  .month-cell span {
+    text-align: right;
+  }
+
+  .month-cell small {
+    font-size: 0.76rem;
+    line-height: 1.25;
+    overflow-wrap: normal;
+  }
+
   .reminder-times {
     grid-template-columns: 1fr;
+  }
+
+  .settings-actions > *,
+  .action-row > * {
+    flex-basis: 100%;
   }
 }
 
@@ -1629,6 +1776,10 @@ button:disabled {
 
   .detail-btn {
     grid-column: 2 / -1;
+  }
+
+  .month-cell {
+    grid-template-columns: 48px 48px minmax(0, 1fr);
   }
 }
 

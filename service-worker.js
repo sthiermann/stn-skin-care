@@ -1,4 +1,4 @@
-const CACHE = "stn-care-v18";
+const CACHE = "stn-care-v19";
 const ASSETS = [
   "./",
   "./index.html",
