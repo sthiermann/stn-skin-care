@@ -72,8 +72,10 @@ a {
 
 .app-shell {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 14px;
   min-width: 0;
+  max-width: 100%;
 }
 
 .app-header {
@@ -83,6 +85,8 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-width: 0;
+  max-width: 100%;
   padding: 6px 0 2px;
 }
 
@@ -135,6 +139,8 @@ a {
   top: calc(env(safe-area-inset-top) + 8px);
   z-index: 11;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 4px;
@@ -148,6 +154,7 @@ a {
 
 .tab {
   min-width: 0;
+  max-width: 100%;
   min-height: 42px;
   border: 0;
   border-radius: 6px;
@@ -156,6 +163,9 @@ a {
   cursor: pointer;
   font-weight: 760;
   font-size: 0.74rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tab.is-active {
@@ -233,8 +243,10 @@ button:disabled {
 
 .view {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 14px;
   min-width: 0;
+  max-width: 100%;
   animation: rise 0.24s ease both;
 }
 
@@ -701,6 +713,7 @@ button:disabled {
 .settings-panel {
   overflow: hidden;
   min-width: 0;
+  max-width: 100%;
 }
 
 .reminder-panel {
@@ -1257,13 +1270,14 @@ button:disabled {
 }
 
 .product-media img {
-  width: 100%;
+  width: auto;
+  max-width: min(100%, 240px);
   height: 142px;
   min-width: 0;
   min-height: 0;
   object-fit: contain;
   filter: drop-shadow(0 12px 16px rgba(42, 75, 61, 0.10));
-  transform: scale(1.24);
+  transform: none;
 }
 
 .product-card footer {
@@ -1337,8 +1351,10 @@ button:disabled {
 
 .field {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 6px;
   min-width: 0;
+  max-width: 100%;
 }
 
 .field label {
@@ -1349,7 +1365,12 @@ button:disabled {
 
 .field input,
 .pass-input {
+  appearance: none;
+  -webkit-appearance: none;
   box-sizing: border-box;
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 100%;
   min-height: 48px;
   width: 100%;
   max-width: 100%;
@@ -1359,6 +1380,17 @@ button:disabled {
   color: var(--ink);
   background: var(--surface);
   padding: 10px 12px;
+  overflow: hidden;
+}
+
+.field input::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
+}
+
+.field input::-webkit-calendar-picker-indicator {
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .toggle {
@@ -1780,6 +1812,76 @@ button:disabled {
 
   .month-cell {
     grid-template-columns: 48px 48px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 360px) {
+  #app {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .app-shell {
+    gap: 12px;
+  }
+
+  .app-header {
+    gap: 8px;
+  }
+
+  .brand {
+    gap: 8px;
+  }
+
+  .brand-mark {
+    width: 40px;
+    height: 40px;
+    font-size: 0.74rem;
+  }
+
+  .brand-copy b {
+    font-size: 0.92rem;
+  }
+
+  .brand-copy span {
+    font-size: 0.72rem;
+  }
+
+  .text-btn.soft {
+    min-height: 36px;
+    padding: 7px 8px;
+    font-size: 0.82rem;
+  }
+
+  .tabs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .tab {
+    min-height: 36px;
+    font-size: 0.72rem;
+  }
+
+  .today-hero,
+  .today-compact,
+  .next-card,
+  .step-card,
+  .product-card,
+  .week-card,
+  .rule-card,
+  .settings-panel,
+  .plan-intro,
+  .logic-panel,
+  .phase-card {
+    max-width: 100%;
+  }
+
+  .field input,
+  .pass-input {
+    font-size: 1rem;
+    padding-left: 10px;
+    padding-right: 10px;
   }
 }
 

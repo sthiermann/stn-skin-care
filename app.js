@@ -1,6 +1,6 @@
 "use strict";
 
-const APP_VERSION = "v19";
+const APP_VERSION = "v20";
 const STORE_KEY = "stn-care-state-v1";
 const PASS_KEY = "stn-care-pass-v1";
 const DEFAULT_REMINDERS = { enabled: false, morning: "07:00", evening: "20:00" };
